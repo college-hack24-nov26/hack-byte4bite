@@ -105,10 +105,14 @@ class GeminiAiService implements AiService {
   }) async {
     try {
       final prompt =
-          'You are VisionMate assisting a user searching for "$targetObject". '
-          'Analyze this image and answer in 1 or 2 concise sentences: '
-          'Is "$targetObject" visible? If yes, state its relative position (left, right, straight ahead) and estimated distance in steps or meters. '
-          'If not visible, say "$targetObject is not visible in this view. Try panning around or walking forward." Speak directly and clearly.';
+          'You are VisionMate, an assistive AI helping a visually impaired user locate "$targetObject" during an active 360-degree pan scan. '
+          'Examine this camera image carefully. '
+          'Is "$targetObject" visible in this frame? '
+          'If YES, reply in this format: '
+          'FOUND: State its exact relative position (straight ahead, to your left, or to your right, and where it rests like on table or floor) and estimated distance in meters or steps. '
+          'Provide a clear, reassuring spoken guidance (for example: "Found! Your $targetObject is straight ahead on the table, about 1 meter away."). '
+          'If NO, reply strictly with: '
+          'NOT_FOUND: $targetObject is not visible in this angle. Keep turning slowly.';
 
       final content = [
         Content.multi([
