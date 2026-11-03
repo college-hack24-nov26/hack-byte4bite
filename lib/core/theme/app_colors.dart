@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color navyDark = Color(0xFF0A1128);
-  static const Color navyMedium = Color(0xFF132044);
-  static const Color navyLight = Color(0xFF1E2F5E);
-  static const Color navyBorder = Color(0xFF2C3E75);
+  static const Color obsidian = Color(0xFF070A0F);
+  static const Color surfaceDark = Color(0xFF0F141F);
+  static const Color surfaceElevated = Color(0xFF161D2D);
+  static const Color surfaceBorder = Color(0xFF1F293D);
+  static const Color surfaceBorderSubtle = Color(0xFF182030);
 
-  static const Color warmWhite = Color(0xFFFAF9F6);
-  static const Color warmWhiteSecondary = Color(0xFFEBE8DF);
-  static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color cardDark = Color(0xFF121C3B);
+  static const Color warmWhite = Color(0xFFF8FAFC);
+  static const Color warmWhiteSecondary = Color(0xFFE2E8F0);
+  static const Color textMuted = Color(0xFF94A3B8);
+  static const Color textDisabled = Color(0xFF64748B);
 
-  static const Color highContrastFocus = Color(0xFFFFD166);
-  static const Color accessibleBlue = Color(0xFF0056B3);
-  static const Color accessibleCyan = Color(0xFF06D6A0);
+  static const Color amberFocus = Color(0xFFF59E0B);
+  static const Color amberLight = Color(0xFFFDE68A);
+  static const Color amberDim = Color(0xFF78350F);
 
-  static const Color textDarkPrimary = Color(0xFF0A1128);
-  static const Color textDarkSecondary = Color(0xFF3E4A61);
-  static const Color textLightPrimary = Color(0xFFFAF9F6);
-  static const Color textLightSecondary = Color(0xFFC3C7D4);
+  static const Color cyanAccent = Color(0xFF06B6D4);
+  static const Color indigoAccent = Color(0xFF818CF8);
+  static const Color emeraldAccent = Color(0xFF10B981);
+  static const Color blueAccent = Color(0xFF3B82F6);
+  static const Color crimsonAccent = Color(0xFFEF4444);
 
-  static const Color success = Color(0xFF1E824C);
-  static const Color error = Color(0xFFD62246);
-  static const Color warning = Color(0xFFE07A5F);
+  static const Color sapphire = Color(0xFF2563EB);
+  static const Color emerald = Color(0xFF10B981);
+  static const Color crimson = Color(0xFFEF4444);
 
-  static const Color disabledBackground = Color(0xFF4A4E69);
-  static const Color disabledText = Color(0xFF8D99AE);
+  static const Color lightBackground = Color(0xFFF8FAFC);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightBorder = Color(0xFFE2E8F0);
+  static const Color lightTextPrimary = Color(0xFF0F172A);
+  static const Color lightTextSecondary = Color(0xFF475569);
 }
-

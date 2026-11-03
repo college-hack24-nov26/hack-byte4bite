@@ -1,7 +1,8 @@
-import '../entities/location_point.dart';
+import 'package:visionmate/shared/models/geo_point_model.dart';
 
 abstract class NavigationRepository {
-  Future<LocationPoint> getCurrentLocation();
-  Stream<LocationPoint> streamLocation();
+  Future<GeoPointModel> getCurrentLocation();
+  Stream<GeoPointModel> watchLocation();
+  double calculateDistanceTo(GeoPointModel from, GeoPointModel to);
+  double calculateBearingTo(GeoPointModel from, GeoPointModel to);
 }
-

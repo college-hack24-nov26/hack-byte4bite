@@ -1,29 +1,45 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/services/location_service.dart';
-import '../../domain/entities/location_point.dart';
+import 'package:visionmate/services/location/location_service.dart';
+import 'package:visionmate/shared/models/geo_point_model.dart';
 import '../../domain/repositories/navigation_repository.dart';
-import '../datasources/location_datasource.dart';
 
 class NavigationRepositoryImpl implements NavigationRepository {
-  final LocationDataSource _dataSource;
+  final LocationService _locationService;
 
-  NavigationRepositoryImpl(this._dataSource);
-
-  @override
-  Future<LocationPoint> getCurrentLocation() =>
-      _dataSource.getCurrentLocation();
+  NavigationRepositoryImpl(this._locationService);
 
   @override
-  Stream<LocationPoint> streamLocation() => _dataSource.streamLocation();
+  Future<GeoPointModel> getCurrentLocation() async {
+    return await _locationService.getCurrentLocation();
+  }
+
+  @override
+  Stream<GeoPointModel> watchLocation() {
+    return _locationService.locationStream;
+  }
+
+  @override
+  double calculateDistanceTo(GeoPointModel from, GeoPointModel to) {
+    return _locationService.calculateDistance(
+      from.latitude,
+      from.longitude,
+      to.latitude,
+      to.longitude,
+    );
+  }
+
+  @override
+  double calculateBearingTo(GeoPointModel from, GeoPointModel to) {
+    return _locationService.calculateBearing(
+      from.latitude,
+      from.longitude,
+      to.latitude,
+      to.longitude,
+    );
+  }
 }
 
-final locationDataSourceProvider = Provider<LocationDataSource>((ref) {
-  final locationService = ref.watch(locationServiceProvider);
-  return LocationDataSource(locationService);
-});
-
 final navigationRepositoryProvider = Provider<NavigationRepository>((ref) {
-  final dataSource = ref.watch(locationDataSourceProvider);
-  return NavigationRepositoryImpl(dataSource);
+  final locationService = ref.watch(locationServiceProvider);
+  return NavigationRepositoryImpl(locationService);
 });
-

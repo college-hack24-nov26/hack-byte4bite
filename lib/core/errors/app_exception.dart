@@ -1,34 +1,81 @@
 class AppException implements Exception {
   final String message;
   final String? code;
+  final dynamic originalError;
 
-  const AppException(this.message, [this.code]);
+  const AppException(
+    this.message, {
+    this.code,
+    this.originalError,
+  });
 
   @override
   String toString() => message;
 }
 
-class PermissionException extends AppException {
-  const PermissionException(super.message, [super.code]);
-}
-
-class CameraExceptionWrapper extends AppException {
-  const CameraExceptionWrapper(super.message, [super.code]);
+class AuthException extends AppException {
+  const AuthException(
+    super.message, {
+    super.code,
+    super.originalError,
+  });
 }
 
 class AiServiceException extends AppException {
-  const AiServiceException(super.message, [super.code]);
+  const AiServiceException(
+    super.message, {
+    super.code,
+    super.originalError,
+  });
 }
 
-class OcrException extends AppException {
-  const OcrException(super.message, [super.code]);
+class CameraServiceException extends AppException {
+  const CameraServiceException(
+    super.message, {
+    super.code,
+    super.originalError,
+  });
 }
 
-class LocationException extends AppException {
-  const LocationException(super.message, [super.code]);
+class LocationServiceException extends AppException {
+  const LocationServiceException(
+    super.message, {
+    super.code,
+    super.originalError,
+  });
 }
 
-class AuthException extends AppException {
-  const AuthException(super.message, [super.code]);
+class SpeechServiceException extends AppException {
+  const SpeechServiceException(
+    super.message, {
+    super.code,
+    super.originalError,
+  });
 }
 
+class PermissionException extends AppException {
+  final String permissionName;
+
+  const PermissionException(
+    super.message, {
+    required this.permissionName,
+    super.code,
+    super.originalError,
+  });
+}
+
+class StorageException extends AppException {
+  const StorageException(
+    super.message, {
+    super.code,
+    super.originalError,
+  });
+}
+
+class NetworkException extends AppException {
+  const NetworkException(
+    super.message, {
+    super.code,
+    super.originalError,
+  });
+}

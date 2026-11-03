@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:visionmate/core/constants/app_constants.dart';
-import 'package:visionmate/core/router/app_routes.dart';
-import 'package:visionmate/core/services/api_key_service.dart';
-import 'package:visionmate/core/services/tts_service.dart';
 import 'package:visionmate/core/theme/app_colors.dart';
-import 'package:visionmate/core/widgets/accessible_button.dart';
-import 'package:visionmate/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:visionmate/shared/widgets/accessible_button.dart';
+import 'package:visionmate/shared/widgets/accessible_header.dart';
+import 'package:visionmate/features/settings/presentation/controllers/settings_controller.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -17,15 +14,18 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final TextEditingController _apiKeyController = TextEditingController();
-  double _speechRate = 0.5;
-  bool _hapticsEnabled = true;
-  bool _hasCustomKey = false;
+  final _apiKeyController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _checkKeyStatus();
+    Future.microtask(() async {
+      await ref.read(settingsControllerProvider.notifier).loadSettings();
+      final key = ref.read(settingsControllerProvider).currentApiKey;
+      if (key != null) {
+        _apiKeyController.text = key;
+      }
+    });
   }
 
   @override
@@ -34,275 +34,184 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
-  Future<void> _checkKeyStatus() async {
-    final apiKeyService = ref.read(apiKeyServiceProvider);
-    final key = await apiKeyService.getGeminiApiKey();
-    if (mounted) {
-      setState(() {
-        _hasCustomKey = key != null && key.isNotEmpty;
-      });
-    }
-  }
-
-  Future<void> _saveKey() async {
-    final newKey = _apiKeyController.text.trim();
-    if (newKey.isNotEmpty) {
-      final apiKeyService = ref.read(apiKeyServiceProvider);
-      await apiKeyService.saveGeminiApiKey(newKey);
-      _apiKeyController.clear();
-      await _checkKeyStatus();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gemini API key saved securely to device Keystore.'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tts = ref.watch(ttsServiceProvider);
-    final authState = ref.watch(authControllerProvider);
-    final authController = ref.read(authControllerProvider.notifier);
+    final state = ref.watch(settingsControllerProvider);
+    final controller = ref.read(settingsControllerProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
+      appBar: const AccessibleHeader(
+        title: 'Settings',
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppConstants.defaultPadding),
           children: [
-            Semantics(
-              header: true,
-              child: Text(
-                'AI Configuration',
-                style: theme.textTheme.headlineMedium,
-              ),
+            Text(
+              'Speech & Audio Feedback',
+              style: theme.textTheme.titleMedium,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.navyMedium,
-                borderRadius:
-                    BorderRadius.circular(AppConstants.defaultBorderRadius),
-                border: Border.all(
-                  color: AppColors.navyBorder,
-                  width: 2,
-                ),
+                color: AppColors.surfaceDark,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.surfaceBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        _hasCustomKey
-                            ? Icons.check_circle_rounded
-                            : Icons.key_rounded,
-                        color: _hasCustomKey
-                            ? AppColors.accessibleCyan
-                            : AppColors.highContrastFocus,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _hasCustomKey
-                            ? 'Gemini 2.5 API Key Configured'
-                            : 'Enter Gemini API Key',
-                        style: theme.textTheme.titleMedium?.copyWith(
+                      const Text(
+                        'Speech Speed',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.warmWhite,
+                        ),
+                      ),
+                      Text(
+                        '${(state.settings.speechRate * 2).toStringAsFixed(1)}x',
+                        style: const TextStyle(
+                          color: AppColors.amberFocus,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Stored securely in Android EncryptedSharedPreferences.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textLightSecondary,
-                    ),
+                  Slider(
+                    value: state.settings.speechRate,
+                    min: 0.1,
+                    max: 1.0,
+                    divisions: 9,
+                    activeColor: AppColors.amberFocus,
+                    inactiveColor: AppColors.surfaceBorder,
+                    onChanged: (val) => controller.setSpeechRate(val),
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _apiKeyController,
-                    obscureText: true,
-                    style: const TextStyle(fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'Paste Gemini API Key...',
-                      filled: true,
-                      fillColor: AppColors.cardDark,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: AppColors.navyBorder),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Speech Pitch',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.warmWhite,
+                        ),
+                      ),
+                      Text(
+                        '${state.settings.speechPitch.toStringAsFixed(1)}x',
+                        style: const TextStyle(
+                          color: AppColors.amberFocus,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: state.settings.speechPitch,
+                    min: 0.5,
+                    max: 2.0,
+                    divisions: 15,
+                    activeColor: AppColors.amberFocus,
+                    inactiveColor: AppColors.surfaceBorder,
+                    onChanged: (val) => controller.setSpeechPitch(val),
+                  ),
+                  const SizedBox(height: 14),
+                  AccessibleButton(
+                    label: 'Test Voice Output',
+                    icon: Icons.volume_up_rounded,
+                    isSecondary: true,
+                    onPressed: () => controller.testSpeech(),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Intelligence Engine',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDark,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.surfaceBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Semantics(
+                    label: 'API Key input field',
+                    child: TextField(
+                      controller: _apiKeyController,
+                      obscureText: true,
+                      style: const TextStyle(color: AppColors.warmWhite),
+                      decoration: const InputDecoration(
+                        labelText: 'Gemini API Key',
+                        hintText: 'Enter your API key',
+                        prefixIcon: Icon(Icons.key_outlined, size: 20),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   AccessibleButton(
-                    label: 'Save Key Securely',
-                    icon: Icons.save_rounded,
-                    isSecondary: true,
-                    onPressed: _saveKey,
+                    label: 'Save Configuration',
+                    icon: Icons.check_circle_outline_rounded,
+                    isLoading: state.isSaving,
+                    onPressed: () => controller.saveApiKey(_apiKeyController.text),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-            Semantics(
-              header: true,
-              child: Text(
-                'Voice & Audio',
-                style: theme.textTheme.headlineMedium,
-              ),
+            Text(
+              'Haptic Response',
+              style: theme.textTheme.titleMedium,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
               decoration: BoxDecoration(
-                color: AppColors.navyMedium,
-                borderRadius:
-                    BorderRadius.circular(AppConstants.defaultBorderRadius),
-                border: Border.all(
-                  color: AppColors.navyBorder,
-                  width: 2,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Speech Rate: ${(_speechRate * 2).toStringAsFixed(1)}x',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppColors.warmWhite,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Slider(
-                    value: _speechRate,
-                    min: 0.2,
-                    max: 1.0,
-                    divisions: 8,
-                    activeColor: AppColors.highContrastFocus,
-                    inactiveColor: AppColors.navyLight,
-                    onChanged: (value) {
-                      setState(() => _speechRate = value);
-                      tts.setRate(value);
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  AccessibleButton(
-                    label: 'Test Voice Rate',
-                    icon: Icons.record_voice_over_rounded,
-                    isSecondary: true,
-                    onPressed: () {
-                      tts.speak('This is VisionMate speaking at this speech speed.');
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Semantics(
-              header: true,
-              child: Text(
-                'Tactile Feedback',
-                style: theme.textTheme.headlineMedium,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              decoration: BoxDecoration(
-                color: AppColors.navyMedium,
-                borderRadius:
-                    BorderRadius.circular(AppConstants.defaultBorderRadius),
-                border: Border.all(
-                  color: AppColors.navyBorder,
-                  width: 2,
-                ),
+                color: AppColors.surfaceDark,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.surfaceBorder),
               ),
               child: SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  'Haptic Vibrations',
-                  style: theme.textTheme.titleMedium?.copyWith(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+                title: const Text(
+                  'Tactile Vibrations',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.warmWhite,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                subtitle: Text(
-                  'Provide tactile feedback when tapping and receiving detections.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textLightSecondary,
-                  ),
+                subtitle: const Text(
+                  'Physical pulse confirmations on button taps and alerts',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                 ),
-                value: _hapticsEnabled,
-                activeThumbColor: AppColors.highContrastFocus,
-                onChanged: (val) {
-                  setState(() => _hapticsEnabled = val);
-                  tts.speak(
-                    val ? 'Haptic feedback enabled.' : 'Haptic feedback disabled.',
-                  );
-                },
+                value: state.settings.hapticsEnabled,
+                activeThumbColor: AppColors.obsidian,
+                activeTrackColor: AppColors.amberFocus,
+                onChanged: (val) => controller.toggleHaptics(val),
               ),
             ),
-            const SizedBox(height: 24),
-            Semantics(
-              header: true,
+            const SizedBox(height: 32),
+            Center(
               child: Text(
-                'Account & Cloud Sync',
-                style: theme.textTheme.headlineMedium,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(AppConstants.defaultPadding),
-              decoration: BoxDecoration(
-                color: AppColors.navyMedium,
-                borderRadius:
-                    BorderRadius.circular(AppConstants.defaultBorderRadius),
-                border: Border.all(
-                  color: AppColors.navyBorder,
-                  width: 2,
+                'VisionMate v${AppConstants.appVersion}',
+                style: const TextStyle(
+                  color: AppColors.textDisabled,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    authState.user != null
-                        ? (authState.user!.isAnonymous
-                            ? 'Signed in as Guest'
-                            : 'Signed in: ${authState.user!.email}')
-                        : 'Not signed in',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppColors.warmWhite,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (authState.user != null)
-                    AccessibleButton(
-                      label: 'Sign Out',
-                      icon: Icons.logout_rounded,
-                      isSecondary: true,
-                      onPressed: () => authController.signOut(),
-                    )
-                  else
-                    AccessibleButton(
-                      label: 'Sign In / Register',
-                      icon: Icons.login_rounded,
-                      onPressed: () => context.push(AppRoutes.auth),
-                    ),
-                ],
               ),
             ),
           ],

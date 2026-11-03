@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/accessible_button.dart';
-import '../controllers/navigation_controller.dart';
+import 'package:visionmate/core/constants/app_constants.dart';
+import 'package:visionmate/core/theme/app_colors.dart';
+import 'package:visionmate/shared/widgets/accessible_button.dart';
+import 'package:visionmate/shared/widgets/accessible_header.dart';
+import 'package:visionmate/features/navigation/presentation/controllers/navigation_controller.dart';
 
 class NavigationScreen extends ConsumerWidget {
   const NavigationScreen({super.key});
@@ -15,22 +16,10 @@ class NavigationScreen extends ConsumerWidget {
     final controller = ref.read(navigationControllerProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Navigation Guidance'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.volume_up_rounded),
-            tooltip: 'Repeat location announcement',
-            onPressed: state.currentPoint == null
-                ? null
-                : () => controller.repeatLocation(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.stop_circle_rounded),
-            tooltip: 'Stop speaking',
-            onPressed: () => controller.stopSpeaking(),
-          ),
-        ],
+      appBar: AccessibleHeader(
+        title: 'Navigation Guidance',
+        onRepeat: state.currentPoint != null ? () => controller.repeatLocation() : null,
+        onStop: () => controller.stopSpeaking(),
       ),
       body: SafeArea(
         child: Padding(
@@ -42,26 +31,33 @@ class NavigationScreen extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(AppConstants.defaultPadding),
                   decoration: BoxDecoration(
-                    color: AppColors.navyMedium,
-                    borderRadius: BorderRadius.circular(
-                      AppConstants.defaultBorderRadius,
-                    ),
-                    border: Border.all(
-                      color: AppColors.highContrastFocus,
-                      width: 2.5,
-                    ),
+                    color: AppColors.surfaceDark,
+                    borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+                    border: Border.all(color: AppColors.surfaceBorder, width: 1.2),
                   ),
                   child: Center(
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            state.isTracking
-                                ? Icons.explore_rounded
-                                : Icons.my_location_rounded,
-                            size: 64,
-                            color: AppColors.highContrastFocus,
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.surfaceElevated,
+                              border: Border.all(
+                                color: state.isTracking
+                                    ? AppColors.amberFocus
+                                    : AppColors.surfaceBorder,
+                                width: 2,
+                              ),
+                            ),
+                            child: Icon(
+                              state.isTracking ? Icons.explore_rounded : Icons.near_me_rounded,
+                              size: 50,
+                              color: state.isTracking ? AppColors.amberFocus : AppColors.warmWhite,
+                            ),
                           ),
                           const SizedBox(height: 24),
                           Semantics(
@@ -79,30 +75,30 @@ class NavigationScreen extends ConsumerWidget {
                           if (state.currentPoint != null) ...[
                             const SizedBox(height: 24),
                             Container(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                               decoration: BoxDecoration(
-                                color: AppColors.cardDark,
+                                color: AppColors.surfaceElevated,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: AppColors.navyBorder,
-                                ),
+                                border: Border.all(color: AppColors.surfaceBorder),
                               ),
                               child: Column(
                                 children: [
                                   Text(
                                     state.currentPoint!.formatCoordinates(),
                                     style: const TextStyle(
-                                      color: AppColors.highContrastFocus,
+                                      color: AppColors.amberFocus,
                                       fontWeight: FontWeight.w700,
-                                      fontSize: 16,
+                                      fontSize: 15,
+                                      letterSpacing: 0.3,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 6),
                                   Text(
-                                    'Accuracy: ±${state.currentPoint!.accuracy.toStringAsFixed(1)}m | Altitude: ${state.currentPoint!.altitude.toStringAsFixed(0)}m',
+                                    'Facing: ${state.currentPoint!.formatHeading()}',
                                     style: const TextStyle(
-                                      color: AppColors.textLightSecondary,
+                                      color: AppColors.textMuted,
                                       fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
@@ -117,24 +113,16 @@ class NavigationScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               AccessibleButton(
-                label: state.isLoading ? 'Acquiring GPS...' : 'Update Location',
+                label: 'Get Current Location',
                 icon: Icons.gps_fixed_rounded,
-                isLoading: state.isLoading,
-                semanticHint: 'Double tap to obtain current GPS fix and speak coordinates',
-                onPressed: state.isLoading
-                    ? null
-                    : () => controller.updateCurrentLocation(),
+                onPressed: () => controller.updateCurrentLocation(),
               ),
               const SizedBox(height: 12),
               AccessibleButton(
-                label: state.isTracking
-                    ? 'Stop Live Tracking'
-                    : 'Start Continuous Tracking',
-                icon: state.isTracking
-                    ? Icons.pause_circle_outline_rounded
-                    : Icons.play_circle_outline_rounded,
+                label: state.isTracking ? 'Stop Live Tracking' : 'Start Live Tracking',
+                icon: state.isTracking ? Icons.stop_rounded : Icons.play_arrow_rounded,
                 isSecondary: true,
-                onPressed: () => controller.toggleContinuousTracking(),
+                onPressed: () => controller.toggleLiveTracking(),
               ),
             ],
           ),
