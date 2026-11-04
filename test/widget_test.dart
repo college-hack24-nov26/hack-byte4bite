@@ -18,11 +18,13 @@ void main() {
       ),
     );
 
-    expect(find.text('VisionMate 3.0'), findsOneWidget);
+    expect(find.text('Vision Mate'), findsOneWidget);
     expect(find.text('Assistance Tools'), findsOneWidget);
-    expect(find.text('Explore Surroundings'), findsOneWidget);
-    expect(find.text('Read Text'), findsOneWidget);
-    expect(find.text('AI Assistant'), findsOneWidget);
-    expect(find.text('Navigation Guidance'), findsOneWidget);
+    expect(find.text('Explore Surround...'), findsOneWidget);
+    expect(find.text('Smart Text Reader'), findsOneWidget);
+    expect(find.text('Find Object & Ca...'), findsOneWidget);
+    expect(find.text('Voice AI Assistant'), findsOneWidget);
+    expect(find.text('Navigation Guida...'), findsOneWidget);
+    expect(find.text('Emergency S...'), findsOneWidget);
   });
 }
